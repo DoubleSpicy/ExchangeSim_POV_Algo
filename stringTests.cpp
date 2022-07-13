@@ -10,5 +10,5 @@ int main(){
     // "a123", "b456", 10.1, "MARKET"
     // , 987.65, "BUY", 0.05
     FIX::order test("38=10.1;35=a123;37=b456;");
-    cout << test.FIX::order::convertToString() << endl;
+    cout << test.FIX::order::convertToString(std::vector<FIX::ACK> & fillOrders) << endl;
 }

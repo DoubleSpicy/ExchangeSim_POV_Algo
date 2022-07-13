@@ -9,23 +9,24 @@ namespace FIX {
     }
 
     order::order(const std::string &MsgType,
-    const std::string &OrderID, 
-    const float &OrderQty, 
-    const std::string &OrdType,
-    const float &Price,
-    const long &SendingTime,
-    const std::string &Side, 
-    const float &POVTargetPercentage,
-    const bool &isFromClient);
-    MsgType(MsgType),
-    OrderID(OrderID),
-    OrderQty(OrderQty),
-    OrdType(OrdType),
-    Price(Price),
-    SendingTime(SendingTime),
-    Side(Side),
-    POVTargetPercentage(POVTargetPercentage),
-    isFromClient(isFromClient){};
+                const std::string &OrderID, 
+                const float &OrderQty, 
+                const std::string &OrdType,
+                const float &Price,
+                const std::string &SenderCompID,
+                const long &SendingTime,
+                const std::string &Side, 
+                const float &POVTargetPercentage):
+                MsgType(MsgType),
+                OrderID(OrderID),
+                OrderQty(OrderQty),
+                OrdType(OrdType),
+                Price(Price),
+                SenderCompID(SenderCompID),
+                SendingTime(SendingTime),
+                Side(Side),
+                POVTargetPercentage(POVTargetPercentage),
+                isFromClient(isFromClient){};
 
     order::order(){
 
@@ -54,6 +55,8 @@ namespace FIX {
                 case 44:
                     Price = stof(body);
                     break;
+                case 49:
+                    SenderCompID = body;
                 case 52:
                     SendingTime = stoll(body);
                 case 54:
@@ -62,40 +65,51 @@ namespace FIX {
                 case 6404:
                     POVTargetPercentage = stof(body);
                     break;
-                case 9999:
-                    isFromClient = stoi(body);
             }
         }
     }
 
-    std::string order::convertToString(){
-    std::string res = "35=" + MsgType + ";37=" + OrderID + ";38=" + std::to_string(OrderQty)
+    std::string order::to_string(){
+    std::string res = "35=" + MsgType + ";49=" + SenderCompID + ";37=" + OrderID + ";38=" + std::to_string(OrderQty)
         + ";40=" + OrdType + ";44=" + std::to_string(Price) + ";54=" + Side
         + ";6404=" + std::to_string(POVTargetPercentage);
     return res;
     }
 
 
-    inline bool FIX::order::compareID(const FIX::order & b) const {
-        return OrderID < b.OrderID;
+    // inline bool FIX::order::compareID(const FIX::order & b) const {
+    //     return OrderID < b.OrderID;
         
-    }
+    // }
 
-    // for comparing order prices
-    inline bool FIX::order::operator> (const FIX::order & other) const {
-        return (Price != other.Price) ? (Price > other.Price) : (compareID(other));
-    }
+    // // for comparing order prices
+    // inline bool FIX::order::operator> (const FIX::order & other) const {
+    //     return (Price != other.Price) ? (Price > other.Price) : (compareID(other));
+    // }
 
-    inline bool FIX::order::operator< (const FIX::order & other) const {
-        return (Price != other.Price) ? (Price < other.Price) : (compareID(other));
-    }
+    // inline bool FIX::order::operator< (const FIX::order & other) const {
+    //     return (Price != other.Price) ? (Price < other.Price) : (compareID(other));
+    // }
 
-    inline bool FIX::order::operator>= (const FIX::order & other) const {
-        return (Price != other.Price) ? (Price >= other.Price) : (compareID(other));
-    }
+    // inline bool FIX::order::operator>= (const FIX::order & other) const {
+    //     return (Price != other.Price) ? (Price >= other.Price) : (compareID(other));
+    // }
 
-    inline bool FIX::order::operator<= (const FIX::order & other) const {
-        return (Price != other.Price) ? (Price <= other.Price) : (compareID(other));
+    // inline bool FIX::order::operator<= (const FIX::order & other) const {
+    //     return (Price != other.Price) ? (Price <= other.Price) : (compareID(other));
+    // }
+
+    ACK::ACK(const std::string & TargetCompID,
+                const std::string & MsgType,
+                const std::string OrderID,
+                const float & OrderQty):
+                TargetCompID(TargetCompID),
+                MsgType(MsgType),
+                OrderID(OrderID),
+                OrderQty(OrderQty){};
+
+    std::string ACK::to_string(){
+        return "35=" + MsgType + ";56=" + TargetCompID + ";37=" + OrderID + ";38=" + std::to_string(OrderQty);
     }
 }
 

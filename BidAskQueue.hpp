@@ -2,6 +2,10 @@
 #define BID_ASK_QUEUE_HPP
 #include <queue>
 #include "FixParser.hpp"
+#include <algorithm>
+#include <functional>
+#include <cmath>
+#include <chrono>
 
 namespace MARKET{
     class BidAskQueue{
@@ -11,6 +15,7 @@ namespace MARKET{
         // compareFixPriceSmaller> askQueue;
         std::deque<FIX::order> bidQueue;
         std::deque<FIX::order> askQueue;
+        std::deque<FIX::order> clientOrders;
         public:
             BidAskQueue();
             void insertBid(const FIX::order & ord);
@@ -19,7 +24,9 @@ namespace MARKET{
             void clearAsk();
             FIX::order popBid();
             FIX::order popAsk();
-            bool fillOrder(FIX::order & filledBid, FIX::order & filledAsk);
+            bool fillOrders(std::vector<FIX::ACK> & filledOrders);
+            bool tryFillAggressiveOrder(FIX::order & ord, std::vector<FIX::ACK> & filledOrders);
+            bool tryFill3MinsOrder(FIX::order & ord, std::vector<FIX::ACK> & filledOrders);
     };
 };
 
