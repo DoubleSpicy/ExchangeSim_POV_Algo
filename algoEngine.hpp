@@ -5,10 +5,13 @@
 #include <vector>
 namespace TRADE{
     template <class T> class AlgoEngine{
-        T tradeAlgo;
-        MARKET::BidAskQueue bidAskQ; 
+        double cumulativeMarketVol = 0, position = 0;
+        std::string orderID = "0", senderCompID = "abc123";
         public:
+            T tradeAlgo;
+            MARKET::BidAskQueue bidAskQ; 
             AlgoEngine(const T & tradeAlgo);
+            // AlgoEngine();
             void run();
             // tradeAlgo.template produceOrders<bool>(std::vector<FIX::order> &orders);
     };

@@ -13,11 +13,11 @@ namespace MARKET{
         // compareFixPriceGreater> bidQueue;
         // std::priority_queue<FIX::order, std::vector<FIX::order>, 
         // compareFixPriceSmaller> askQueue;
-        std::deque<FIX::order> bidQueue;
-        std::deque<FIX::order> askQueue;
-        std::deque<FIX::order> clientOrders;
         public:
             BidAskQueue();
+            std::deque<FIX::order> bidQueue;
+            std::deque<FIX::order> askQueue;
+            std::deque<FIX::order> clientOrders;
             void insertBid(const FIX::order & ord);
             void insertAsk(const FIX::order & ord);
             void clearBid();
@@ -27,6 +27,7 @@ namespace MARKET{
             bool fillOrders(std::vector<FIX::ACK> & filledOrders);
             bool tryFillAggressiveOrder(FIX::order & ord, std::vector<FIX::ACK> & filledOrders);
             bool tryFill3MinsOrder(FIX::order & ord, std::vector<FIX::ACK> & filledOrders);
+            void addingQuotesIntoQueues(const std::string & updt);
     };
 };
 

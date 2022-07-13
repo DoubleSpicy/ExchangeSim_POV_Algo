@@ -87,4 +87,31 @@ namespace MARKET{
         return res;
     }
 
+    void BidAskQueue::addingQuotesIntoQueues(const std::string & updt){
+            // parsing the quotes
+            std::string parsedStr;
+            std::stringstream semiColonParser(updt);
+            int idx = 0;
+            while(std::getline(semiColonParser, parsedStr, ';')){
+                if(idx == 2){
+                    // bid quotes
+                    std::vector<FIX::order> bidQuotes = FIX::parseQuotes(parsedStr);
+                    for(auto &quote : bidQuotes){
+                        insertBid(quote);
+                        std::cout << "PARSER: " << quote.to_string() << std::endl;
+                    }
+                }
+                if(idx == 3){
+                    // ask quotes
+                    std::vector<FIX::order> askQuotes = FIX::parseQuotes(parsedStr);
+                    for(auto &quote : askQuotes){
+                        insertAsk(quote);
+                        std::cout << "PARSER: " << quote.to_string() << std::endl;
+                    }
+                }
+                idx++;
+                
+            }
+    }
+
 }
