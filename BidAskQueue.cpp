@@ -1,6 +1,20 @@
 #include "BidAskQueue.hpp"
+ 
+template<class T>
+typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
+    almost_equal(T x, T y, int ulp)
+{
+    // https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
+    // the machine epsilon has to be scaled to the magnitude of the values used
+    // and multiplied by the desired precision in ULPs (units in the last place)
+    return std::fabs(x-y) <= std::numeric_limits<T>::epsilon() * std::fabs(x+y) * ulp
+        // unless the result is subnormal
+        || std::fabs(x-y) < std::numeric_limits<T>::min();
+}
 
 namespace MARKET{
+    // double epsilon = 0.00001;
+
     BidAskQueue::BidAskQueue(){
 
     }
@@ -45,7 +59,7 @@ namespace MARKET{
 
         for(auto clientIterator = clientOrders.begin(); clientIterator != clientOrders.end();){
             for(auto askIterator = askQueue.begin(); askIterator != askQueue.end();){
-                if(abs(clientIterator->Price - askIterator->Price) < 0.00005){
+                if(almost_equal(clientIterator->Price, askIterator->Price, 5)){
                     res = true;
                     float amountFilled = std::min(clientIterator->OrderQty, askIterator->OrderQty);
                     clientIterator->OrderQty -= amountFilled;
@@ -53,7 +67,7 @@ namespace MARKET{
                     // create ACK FILLED message
                     FIX::ACK ACKmessage(clientIterator->SenderCompID, "3", clientIterator->OrderID, amountFilled);
                     filledOrders.push_back(ACKmessage);
-                    if(askIterator->OrderQty == 0){
+                    if(almost_equal(askIterator->OrderQty, (float)0, 5)){
                         askIterator = askQueue.erase(askIterator);
                     }
                     else{
@@ -62,7 +76,7 @@ namespace MARKET{
                     break;
                 }
             }
-            if(abs(clientIterator->OrderQty) < 0.00005 && abs(clientIterator->OrderQty) > -0.00005){
+            if(almost_equal(clientIterator->OrderQty, (float)0, 5)){
                 clientIterator = clientOrders.erase(clientIterator);
             }
             else{

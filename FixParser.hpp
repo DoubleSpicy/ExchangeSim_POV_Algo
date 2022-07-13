@@ -3,8 +3,20 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <vector>
+#include <cmath>
+#include <limits>
+#include <iomanip>
+#include <type_traits>
+#include <algorithm>
+
+// template<class T>
+// typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_equal(T x, T y, int ulp);
 
 namespace FIX{
+
+
+
     class message{
         public:
             message();
@@ -23,7 +35,6 @@ namespace FIX{
             long SendingTime;
             std::string Side;
             float POVTargetPercentage;
-            bool isFromClient;
 
             order();
 
@@ -63,6 +74,8 @@ namespace FIX{
                 const float & OrderQty);
             std::string to_string() override;
     };
+
+    std::vector<FIX::order> parseQuotes(const std::string & marketData);
 
 };
 

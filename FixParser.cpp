@@ -2,11 +2,12 @@
 // https://www.onixs.biz/fix-dictionary/4.4/fields_by_tag.html
 #include "FixParser.hpp"
 
-
 namespace FIX {
     message::message(){
         // std::cout << "TEST\n";
     }
+
+
 
     order::order(const std::string &MsgType,
                 const std::string &OrderID, 
@@ -25,8 +26,8 @@ namespace FIX {
                 SenderCompID(SenderCompID),
                 SendingTime(SendingTime),
                 Side(Side),
-                POVTargetPercentage(POVTargetPercentage),
-                isFromClient(isFromClient){};
+                POVTargetPercentage(POVTargetPercentage)
+                {};
 
     order::order(){
 
@@ -110,6 +111,26 @@ namespace FIX {
 
     std::string ACK::to_string(){
         return "35=" + MsgType + ";56=" + TargetCompID + ";37=" + OrderID + ";38=" + std::to_string(OrderQty);
+    }
+
+    std::vector<FIX::order> parseQuotes(const std::string & marketData){
+        // input a one-sided quote message, return the parsed quotes of FIX objects.
+        // e.g. 53.000 10500 52.950 1000 52.900 2000
+        // becomes [53.000, 10500], [52.950, 1000], [52.900, 2000]
+        std::vector<FIX::order> res;
+        std::vector<std::string> quote;
+        std::stringstream parser(marketData);
+        std::string temp;
+        while(std::getline(parser, temp, ' ')){
+            quote.push_back(temp);
+            if(quote.size() == 2){
+                // FIX::order q()
+                FIX::order marketQuote("0", "-1", stof(quote[1]), "-1", stof(quote[0]), "-1", 0, "BID", 0);
+                res.push_back(marketQuote);
+                quote.clear();
+            }
+        }
+        return res;
     }
 }
 
