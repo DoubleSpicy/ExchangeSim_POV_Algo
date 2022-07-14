@@ -9,7 +9,7 @@
 namespace EXCHANGE{
     class TradeMatchingEngine{
         MARKET::BidAskQueue BidAsk;
-        std::vector<FIX::order> currentClientOrders;
+        // std::vector<FIX::order> currentClientOrders;
         
         
         public:
@@ -17,7 +17,6 @@ namespace EXCHANGE{
             void recvOrders(); // recv orders from algo
             void recvMarkets(); // recv market data
             void sendACK(); // send ack msg to algo engine
-            bool matchOrder(); // try fill order from algo engine
     };
 }
 #endif

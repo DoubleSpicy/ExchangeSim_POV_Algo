@@ -12,6 +12,13 @@
 #include <sstream>
 #include <vector>
 
+template < typename Type > std::string to_str (const Type & t)
+{
+std::ostringstream os;
+os << t;
+return os.str ();
+}
+
 int main(int argc, char* argv[]){
     // ./marketDataStreamer ./data/market_data.csv
     // a.k.a. "Fake Bloomberg"
@@ -48,12 +55,25 @@ int main(int argc, char* argv[]){
     while (rowIdx < content.size()) {
         // Send current clock (msecs) to subscribers
         end = std::chrono::steady_clock::now();
+        if(rowIdx + 1 < content.size() && content[rowIdx][1] == content[rowIdx+1][1]) rowIdx++;
         if(std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() + 5399999 - stoi(content[rowIdx][1]) >= 0){
             // std::cout << "TimeNow: " << std::chrono::time_point_cast<std::chrono::milliseconds>(end).time_since_epoch().count() << std::endl;
             std::string data = "";
+            int cnt = 0;
+            
             for(auto &str: content[rowIdx]){
-                data += str + ";";
+                std::cout << str << " ";
+                if(cnt == 1){
+                    data += to_str(std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::system_clock::now().time_since_epoch()).count()) + ";";
+                }
+                else{
+                    data += str + ";";
+                
+                }
+                cnt++;
             }
+            std::cout << std::endl;
             msg.rebuild(data.size());
             memcpy(msg.data(), data.data(), data.size());
             std::cout << "sent: " << data << std::endl;

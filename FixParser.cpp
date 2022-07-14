@@ -3,6 +3,10 @@
 #include "FixParser.hpp"
 
 namespace FIX {
+    float roundingOffFloat(const float & val, const int & precision = 10000){
+        return round(val * precision) / precision;
+    }
+
     message::message(){
         // std::cout << "TEST\n";
     }
@@ -70,10 +74,17 @@ namespace FIX {
         }
     }
 
+    template < typename Type > std::string to_str (const Type & t)
+    {
+    std::ostringstream os;
+    os << t;
+    return os.str ();
+    }
+
     std::string order::to_string(){
-    std::string res = "35=" + MsgType + ";49=" + SenderCompID + ";37=" + OrderID + ";38=" + std::to_string(OrderQty)
-        + ";40=" + OrdType + ";44=" + std::to_string(Price) + ";54=" + Side
-        + ";6404=" + std::to_string(POVTargetPercentage);
+    std::string res = "35=" + MsgType + ";49=" + SenderCompID + ";37=" + OrderID + ";38=" + to_str(OrderQty)
+        + ";40=" + OrdType + ";44=" + to_str(Price) + ";52=" + to_str(SendingTime) + ";54=" + Side
+        + ";6404=" + to_str(POVTargetPercentage);
     return res;
     }
 
@@ -124,13 +135,38 @@ namespace FIX {
         while(std::getline(parser, temp, ' ')){
             quote.push_back(temp);
             if(quote.size() == 2){
-                // FIX::order q()
-                FIX::order marketQuote("0", "-1", stof(quote[1]), "-1", stof(quote[0]), "-1", 0, "BID", 0);
+                // std::cout << "PARSING: " << quote[1] << "=>" << roundingOffFloat(stof(quote[1])) << ", " << quote[0] << "=>" << roundingOffFloat(stof(quote[0])) << std::endl;
+                FIX::order marketQuote("0", "-1", roundingOffFloat(stof(quote[1])), "-1", roundingOffFloat(stof(quote[0])), "-1", 
+                std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::system_clock::now().time_since_epoch()).count(), "BID", 0);
                 res.push_back(marketQuote);
                 quote.clear();
             }
         }
         return res;
+    }
+
+    void sendAllMessages(std::vector<FIX::order> & filledOrders, zmq::socket_t & publisher)
+    {
+        zmq::message_t msg(1);
+        for(auto &ackMessages: filledOrders){
+            std::string data = ackMessages.to_string();
+            msg.rebuild(data.size());
+            memcpy(msg.data(), data.data(), data.size());
+            std::cout << "sent: " << data << std::endl;
+            publisher.send(msg);
+        }
+    }
+
+    void sendAllMessages(std::vector<FIX::ACK> & ACKs, zmq::socket_t & publisher){
+        zmq::message_t msg(1);
+        for(auto &ackMessages: ACKs){
+            std::string data = ackMessages.to_string();
+            msg.rebuild(data.size());
+            memcpy(msg.data(), data.data(), data.size());
+            std::cout << "sent: " << data << std::endl;
+            publisher.send(msg);
+        }
     }
 }
 

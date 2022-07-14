@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <type_traits>
 #include <algorithm>
+#include "zmq.hpp"
 
 namespace FIX{
     class message{
@@ -71,7 +72,9 @@ namespace FIX{
 
     std::vector<FIX::order> parseQuotes(const std::string & marketData);
 
-
+    // template <typename T, typename A>
+    void sendAllMessages(std::vector<FIX::ACK> & filledOrders, zmq::socket_t & publisher);
+    void sendAllMessages(std::vector<FIX::order> & filledOrders, zmq::socket_t & publisher);
 };
 
 

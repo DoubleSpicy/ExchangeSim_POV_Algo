@@ -51,32 +51,29 @@ namespace MARKET{
 
     bool BidAskQueue::fillOrders(std::vector<FIX::ACK> & filledOrders){
         bool res = false;
-
-        // TODO: FORCE FILL AFTER 3 MIN
-        // if(clientOrders.size() > 0){
-        //     if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - client).count() )
-        // }
-
+        std::cout << "cur qty: " << clientOrders[0].OrderQty << ", askQueueSize: " << askQueue.size() << ", clientOrderSize: " << clientOrders.size() << std::endl;
         for(auto clientIterator = clientOrders.begin(); clientIterator != clientOrders.end();){
-            for(auto askIterator = askQueue.begin(); askIterator != askQueue.end();){
-                if(almost_equal(clientIterator->Price, askIterator->Price, 5)){
+            for(auto askIterator = askQueue.begin(); askIterator != askQueue.end(); askIterator++){
+                // std::cout << "Comparing prices: " << clientIterator->Price << " " << askIterator->Price << std::endl;
+                if(almost_equal(clientIterator->Price, askIterator->Price, 2)){
                     res = true;
                     float amountFilled = std::min(clientIterator->OrderQty, askIterator->OrderQty);
                     clientIterator->OrderQty -= amountFilled;
-                    askIterator->OrderQty -= amountFilled;
+                    // askIterator->OrderQty -= amountFilled;
+                    std::cout << "Filled :" << amountFilled << " ,order: " << clientIterator->to_string() << std::endl;
                     // create ACK FILLED message
                     FIX::ACK ACKmessage(clientIterator->SenderCompID, "3", clientIterator->OrderID, amountFilled);
                     filledOrders.push_back(ACKmessage);
-                    if(almost_equal(askIterator->OrderQty, (float)0, 5)){
-                        askIterator = askQueue.erase(askIterator);
-                    }
-                    else{
-                        askIterator++;
-                    }
-                    break;
                 }
+                // if(almost_equal(askIterator->OrderQty, (float)0, 5)){
+                //     askIterator = askQueue.erase(askIterator);
+                // }
+                // else{
+                //     askIterator++;
+                // }
             }
-            if(almost_equal(clientIterator->OrderQty, (float)0, 5)){
+            // std::cout << "cur qty: " << clientIterator->OrderQty << std::endl;
+            if(almost_equal(clientIterator->OrderQty, (float)0, 2)){
                 clientIterator = clientOrders.erase(clientIterator);
             }
             else{
@@ -88,6 +85,8 @@ namespace MARKET{
     }
 
     void BidAskQueue::addingQuotesIntoQueues(const std::string & updt){
+            bidQueue.clear();
+            askQueue.clear();
             // parsing the quotes
             std::string parsedStr;
             std::stringstream semiColonParser(updt);
@@ -98,7 +97,7 @@ namespace MARKET{
                     std::vector<FIX::order> bidQuotes = FIX::parseQuotes(parsedStr);
                     for(auto &quote : bidQuotes){
                         insertBid(quote);
-                        std::cout << "PARSER: " << quote.to_string() << std::endl;
+                        std::cout << "BID PARSER: " << quote.to_string() << std::endl;
                     }
                 }
                 if(idx == 3){
@@ -106,12 +105,48 @@ namespace MARKET{
                     std::vector<FIX::order> askQuotes = FIX::parseQuotes(parsedStr);
                     for(auto &quote : askQuotes){
                         insertAsk(quote);
-                        std::cout << "PARSER: " << quote.to_string() << std::endl;
+                        std::cout << "ASK PARSER: " << quote.to_string() << std::endl;
                     }
                 }
                 idx++;
                 
             }
+    }
+
+    bool BidAskQueue::cancelOrder(const FIX::order & cancelRequest, std::vector<FIX::ACK> cancelledOrders){
+        bool res = false; // successful cancellation => true
+        for(auto it = clientOrders.begin(); it != clientOrders.end(); it++){
+            if(cancelRequest.OrderID == it->OrderID){
+                res = true;
+                FIX::ACK ackCancelMsg(cancelRequest.SenderCompID, "5", cancelRequest.OrderID, -1);
+                cancelledOrders.push_back(ackCancelMsg);
+                clientOrders.erase(it);
+                break;
+            }
+        }
+        return res;
+    }
+
+
+    bool BidAskQueue::tryFill3MinsOrder(std::vector<FIX::ACK> & filledOrders){
+        bool res = false;
+        for(auto it = clientOrders.begin(); it != clientOrders.end(); ){
+            auto msUnixTimeNow = std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::system_clock::now().time_since_epoch()).count();
+            std::cout << "msUnixTimeNow: " << msUnixTimeNow << "\nSendingTime: " << it->SendingTime << std::endl;
+            if(msUnixTimeNow - it->SendingTime >= 180000){ // 180000
+                res = true;
+                FIX::ACK ackFillMsg(it->SenderCompID, "5", it->OrderID, -1);
+                filledOrders.push_back(ackFillMsg);
+                it = clientOrders.erase(it);
+                std::cout << "erased!\n";
+            }
+            else{
+                break;
+            }
+        }
+
+        return res;
     }
 
 }

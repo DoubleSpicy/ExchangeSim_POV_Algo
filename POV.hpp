@@ -9,7 +9,7 @@
 
 namespace ALGO{
     class POVAlgo{
-        float minRatio = 0.8, maxRatio = 1.2, targetPercentage = 0, targetQuantity = 0;
+        float minRatio = 0.8, maxRatio = 1.2, targetPercentage = 0.1, targetQuantity = 99999;
         public:
             bool execute(std::vector<FIX::order> & newOrders, MARKET::BidAskQueue & bidAskQ,
             double & cumulativeTradedVol, double & position, std::string & orderID, std::string & senderCompID); // if algo engine wanna produce orders, put them into the vector, and return true

@@ -1,6 +1,7 @@
 // algo engine
 #include "algoEngine.hpp"
 #include "zmq.hpp"
+#include "POV.hpp"
 #include <functional>
 
 namespace TRADE{
@@ -14,8 +15,8 @@ namespace TRADE{
         subscriber.connect("tcp://127.0.0.1:5556");
         subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
-        zmq::context_t context (1);
-        zmq::socket_t publisher(context, ZMQ_PUB); // for sending orders to exchange.
+        zmq::context_t contextPub (1);
+        zmq::socket_t publisher(contextPub, ZMQ_PUB); // for sending orders to exchange.
         publisher.connect("tcp://127.0.0.1:5557"); // can be remapped using docker.
         zmq::message_t msg(1);
         std::string data = "abc123";
@@ -33,32 +34,23 @@ namespace TRADE{
             bidAskQ.addingQuotesIntoQueues(updt);
 
             std::vector<FIX::order> newOrders;
-            tradeAlgo.execute(newOrders, bidAskQ); // execute the strategy
-            
-            // call trade algo to do something with these data
-            for(auto &order: newOrders){
-                data = order.to_string();
-                msg.rebuild(data.size());
-                memcpy(msg.data(), data.data(), data.size());
-                std::cout << "sent: " << data << std::endl;
-                publisher.send(msg);
-            }
-
+            tradeAlgo.execute(newOrders, bidAskQ, cumulativeMarketVol, position, orderID, senderCompID); // execute the strategy
+            FIX::sendAllMessages(newOrders, publisher);
         }
     }
     
 }
 
-class dummyAlgo {
-    public:
-        dummyAlgo(){
-            std::cout << "hi\n";
-        }
-};
+// class dummyAlgo {
+//     public:
+//         dummyAlgo(){
+//             std::cout << "hi\n";
+//         }
+// };
 
 int main(){
-    dummyAlgo algo;
-    TRADE::AlgoEngine<dummyAlgo> instance(algo);
+    ALGO::POVAlgo algo;
+    TRADE::AlgoEngine<ALGO::POVAlgo> instance(algo);
     // std::invoke(TRADE::AlgoEngine<dummyAlgo>::run(), instance);
     instance.run();
 }

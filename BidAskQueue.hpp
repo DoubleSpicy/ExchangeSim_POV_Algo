@@ -25,8 +25,9 @@ namespace MARKET{
             FIX::order popBid();
             FIX::order popAsk();
             bool fillOrders(std::vector<FIX::ACK> & filledOrders);
-            bool tryFillAggressiveOrder(FIX::order & ord, std::vector<FIX::ACK> & filledOrders);
-            bool tryFill3MinsOrder(FIX::order & ord, std::vector<FIX::ACK> & filledOrders);
+            bool cancelOrder(const FIX::order & cancelRequest, std::vector<FIX::ACK> cancelledOrders);
+            // bool tryFillAggressiveOrder(FIX::order & ord, std::vector<FIX::ACK> & filledOrders);
+            bool tryFill3MinsOrder(std::vector<FIX::ACK> & filledOrders);
             void addingQuotesIntoQueues(const std::string & updt);
     };
 };

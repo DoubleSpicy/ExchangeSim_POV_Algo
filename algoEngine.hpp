@@ -6,7 +6,7 @@
 namespace TRADE{
     template <class T> class AlgoEngine{
         double cumulativeMarketVol = 0, position = 0;
-        std::string orderID = "0", senderCompID = "abc123";
+        std::string orderID = "0", senderCompID = "0";
         public:
             T tradeAlgo;
             MARKET::BidAskQueue bidAskQ; 

@@ -23,25 +23,34 @@ namespace ALGO{
     double & cumulativeTradedVol, double & position, std::string & orderID, std::string & senderCompID){
         // implement POV algo here.
         bool res = false;
-        float completedTarget = (float)(position / cumulativeTradedVol);
-        if(completedTarget > 1.2){
-            // halt
+        for(auto &bidQuote: bidAskQ.bidQueue){
+            float volToBuy = std::min(bidQuote.OrderQty*targetPercentage, targetQuantity);
+            float price = bidQuote.Price;
+            // FIX::order marketQuote("0", "0", 1234, "0", 7654, "0", 0, "BID", 0);
+            auto millisecondsUTC = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            FIX::order newOrder("0", orderID, volToBuy, "0", price, senderCompID, millisecondsUTC, "BUY", targetPercentage);
+            orderID = std::to_string(stol(orderID) + 1);
+            newOrders.push_back(newOrder);
         }
-        else if (completedTarget < 0.8){
-            // aggressive buy
+        // float completedTarget = (float)(position / cumulativeTradedVol);
+        // if(completedTarget > 1.2){
+        //     // halt
+        // }
+        // else if (completedTarget < 0.8){
+        //     // aggressive buy
 
-        }
-        else{
-            // Passive Posting
-            for(auto &bidQuote: bidAskQ.bidQueue){
-                float volToBuy = std::min(bidQuote.OrderQty*targetPercentage, targetQuantity);
-                float price = bidQuote.Price;
-                FIX::order marketQuote("0", "0", 1234, "0", 7654, "0", 0, "BID", 0);
-                auto millisecondsUTC = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-                FIX::order newOrder("0", orderID, volToBuy, "0", price, senderCompID, std::to_string(millisecondsUTC), "BUY", targetPercentage);
-                orderID = std::to_string(stol(orderID) + 1);
-            }
-        }
+        // }
+        // else{
+        //     // Passive Posting
+        //     for(auto &bidQuote: bidAskQ.bidQueue){
+        //         float volToBuy = std::min(bidQuote.OrderQty*targetPercentage, targetQuantity);
+        //         float price = bidQuote.Price;
+        //         FIX::order marketQuote("0", "0", 1234, "0", 7654, "0", 0, "BID", 0);
+        //         auto millisecondsUTC = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        //         FIX::order newOrder("0", orderID, volToBuy, "0", price, senderCompID, millisecondsUTC, "BUY", targetPercentage);
+        //         orderID = std::to_string(stol(orderID) + 1);
+        //     }
+        // }
 
         return res;
     }
