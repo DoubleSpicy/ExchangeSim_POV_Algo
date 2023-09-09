@@ -51,18 +51,22 @@ namespace MARKET{
 
     bool BidAskQueue::fillOrders(std::vector<FIX::ACK> & filledOrders){
         bool res = false;
+        for(auto askIterator = askQueue.begin(); askIterator != askQueue.end(); askIterator++){
+            std::cout << "ask price: " << askIterator->Price << std::endl;
+        }
         std::cout << "cur qty: " << clientOrders[0].OrderQty << ", askQueueSize: " << askQueue.size() << ", clientOrderSize: " << clientOrders.size() << std::endl;
         for(auto clientIterator = clientOrders.begin(); clientIterator != clientOrders.end();){
             for(auto askIterator = askQueue.begin(); askIterator != askQueue.end(); askIterator++){
                 // std::cout << "Comparing prices: " << clientIterator->Price << " " << askIterator->Price << std::endl;
-                if(almost_equal(clientIterator->Price, askIterator->Price, 2)){
+                
+                if(clientIterator->Price == askIterator->Price){
                     res = true;
                     float amountFilled = std::min(clientIterator->OrderQty, askIterator->OrderQty);
                     clientIterator->OrderQty -= amountFilled;
                     // askIterator->OrderQty -= amountFilled;
                     std::cout << "Filled :" << amountFilled << " ,order: " << clientIterator->to_string() << std::endl;
                     // create ACK FILLED message
-                    FIX::ACK ACKmessage(clientIterator->SenderCompID, "3", clientIterator->OrderID, amountFilled);
+                    FIX::ACK ACKmessage(clientIterator->SenderCompID, "4", clientIterator->OrderID, amountFilled, clientIterator->Price);
                     filledOrders.push_back(ACKmessage);
                 }
                 // if(almost_equal(askIterator->OrderQty, (float)0, 5)){
@@ -73,7 +77,7 @@ namespace MARKET{
                 // }
             }
             // std::cout << "cur qty: " << clientIterator->OrderQty << std::endl;
-            if(almost_equal(clientIterator->OrderQty, (float)0, 2)){
+            if(clientIterator->OrderQty == 0){
                 clientIterator = clientOrders.erase(clientIterator);
             }
             else{
@@ -118,7 +122,7 @@ namespace MARKET{
         for(auto it = clientOrders.begin(); it != clientOrders.end(); it++){
             if(cancelRequest.OrderID == it->OrderID){
                 res = true;
-                FIX::ACK ackCancelMsg(cancelRequest.SenderCompID, "5", cancelRequest.OrderID, -1);
+                FIX::ACK ackCancelMsg(cancelRequest.SenderCompID, "5", cancelRequest.OrderID, -1, it->Price);
                 cancelledOrders.push_back(ackCancelMsg);
                 clientOrders.erase(it);
                 break;
@@ -136,7 +140,7 @@ namespace MARKET{
             std::cout << "msUnixTimeNow: " << msUnixTimeNow << "\nSendingTime: " << it->SendingTime << std::endl;
             if(msUnixTimeNow - it->SendingTime >= 180000){ // 180000
                 res = true;
-                FIX::ACK ackFillMsg(it->SenderCompID, "5", it->OrderID, -1);
+                FIX::ACK ackFillMsg(it->SenderCompID, "4", it->OrderID, it->OrderQty, it->Price);
                 filledOrders.push_back(ackFillMsg);
                 it = clientOrders.erase(it);
                 std::cout << "erased!\n";

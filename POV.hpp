@@ -8,11 +8,11 @@
 #include <string>
 
 namespace ALGO{
-    class POVAlgo{
-        float minRatio = 0.8, maxRatio = 1.2, targetPercentage = 0.1, targetQuantity = 99999;
+    class POVAlgo{ 
         public:
+            float minRatio = 0.8, maxRatio = 1.2, targetPercentage = 0.1, targetQuantity = 9999;
             bool execute(std::vector<FIX::order> & newOrders, MARKET::BidAskQueue & bidAskQ,
-            double & cumulativeTradedVol, double & position, std::string & orderID, std::string & senderCompID); // if algo engine wanna produce orders, put them into the vector, and return true
+            double & cumulativeTradedVol, double & position, std::string & orderID, std::string & senderCompID, std::deque<FIX::order> & openOrders); // if algo engine wanna produce orders, put them into the vector, and return true
             void addCumulativeMarketVol(const float & amount);
             void setMinRatio(const float & val);
             void setMaxRatio(const float & val);

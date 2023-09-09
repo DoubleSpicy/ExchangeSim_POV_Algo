@@ -9,14 +9,12 @@
 namespace EXCHANGE{
     class TradeMatchingEngine{
         MARKET::BidAskQueue BidAsk;
+        float cumulativeQty = 0;
         // std::vector<FIX::order> currentClientOrders;
         
         
         public:
             void run(); // non-stop matching
-            void recvOrders(); // recv orders from algo
-            void recvMarkets(); // recv market data
-            void sendACK(); // send ack msg to algo engine
     };
 }
 #endif

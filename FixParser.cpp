@@ -114,14 +114,39 @@ namespace FIX {
     ACK::ACK(const std::string & TargetCompID,
                 const std::string & MsgType,
                 const std::string OrderID,
-                const float & OrderQty):
+                const float & OrderQty,
+                const float & Price):
                 TargetCompID(TargetCompID),
                 MsgType(MsgType),
                 OrderID(OrderID),
-                OrderQty(OrderQty){};
+                OrderQty(OrderQty),
+                Price(Price){};
+
+    ACK::ACK(const std::string & msg){
+        std::stringstream parser(msg);
+        std::string segment;
+        while(std::getline(parser, segment, ';')){
+            int type = stoi(segment.substr(0, segment.find('=')));
+            std::string body = segment.substr(segment.find('=')+1, segment.size()-1);
+            switch(type){
+                case 35:
+                    MsgType = body;
+                    break;
+                case 37:
+                    OrderID = body;
+                    break;
+                case 38:
+                    OrderQty = stof(body);
+                    break;
+                case 44:
+                    Price = stof(body);
+                    break;
+            }
+        }    
+    }
 
     std::string ACK::to_string(){
-        return "35=" + MsgType + ";56=" + TargetCompID + ";37=" + OrderID + ";38=" + std::to_string(OrderQty);
+        return "35=" + MsgType + ";56=" + TargetCompID + ";37=" + OrderID + ";38=" + to_str(OrderQty) + ";44=" + to_str(Price);
     }
 
     std::vector<FIX::order> parseQuotes(const std::string & marketData){
@@ -146,11 +171,12 @@ namespace FIX {
         return res;
     }
 
-    void sendAllMessages(std::vector<FIX::order> & filledOrders, zmq::socket_t & publisher)
+    void sendAllMessages(std::vector<FIX::order> & filledOrders, zmq::socket_t & publisher, std::ofstream & log)
     {
         zmq::message_t msg(1);
-        for(auto &ackMessages: filledOrders){
-            std::string data = ackMessages.to_string();
+        for(auto &messages: filledOrders){
+            std::string data = messages.to_string();
+            std::cout << "Strategy out: [[" << ((messages.MsgType == "0") ? "N" : "C") << messages.Price << ":" << messages.OrderQty << "]]" << std::endl;
             msg.rebuild(data.size());
             memcpy(msg.data(), data.data(), data.size());
             std::cout << "sent: " << data << std::endl;
@@ -158,10 +184,14 @@ namespace FIX {
         }
     }
 
-    void sendAllMessages(std::vector<FIX::ACK> & ACKs, zmq::socket_t & publisher){
+    void sendAllMessages(std::vector<FIX::ACK> & ACKs, zmq::socket_t & publisher, std::ofstream & log, float & cumulativeQuantity){
         zmq::message_t msg(1);
         for(auto &ackMessages: ACKs){
             std::string data = ackMessages.to_string();
+            if(ackMessages.MsgType == "3"){
+                cumulativeQuantity += ackMessages.OrderQty;
+               std::cout << "Filled: " << ackMessages.OrderQty << "@" << ackMessages.Price << ", Cumulative Quantity: " << cumulativeQuantity << std::endl;
+            }
             msg.rebuild(data.size());
             memcpy(msg.data(), data.data(), data.size());
             std::cout << "sent: " << data << std::endl;

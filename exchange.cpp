@@ -5,6 +5,8 @@
 // TODO: split m
 namespace EXCHANGE{
     void TradeMatchingEngine::run(){
+        std::ofstream exchangeLog("log.txt");
+
         zmq::context_t context(1);
         zmq::socket_t subscriber (context, ZMQ_SUB);
         subscriber.connect("tcp://127.0.0.1:5556");
@@ -51,7 +53,7 @@ namespace EXCHANGE{
                     std::cout << BidAsk.clientOrders.size() << " queued." << std::endl;
                     // std::cout << currentClientOrders.back().to_string() << std::endl;
                     // TODO: send ack order msg
-                    FIX::ACK ackOrderMsg(orderFromClient.SenderCompID, "5", orderFromClient.OrderID, -1);
+                    FIX::ACK ackOrderMsg(orderFromClient.SenderCompID, "3", orderFromClient.OrderID, -1, orderFromClient.Price);
                     std::string data = ackOrderMsg.to_string();
                     msg.rebuild(data.size());
                     ackPublisher.send(msg);
@@ -60,7 +62,7 @@ namespace EXCHANGE{
                     std::cout << "is not order\n";
                     std::vector<FIX::ACK> cancelledOrders;
                     BidAsk.cancelOrder(orderFromClient, cancelledOrders);
-                    FIX::sendAllMessages(cancelledOrders, ackPublisher);
+                    FIX::sendAllMessages(cancelledOrders, ackPublisher, exchangeLog, cumulativeQty);
                 }
             }
 
@@ -72,7 +74,7 @@ namespace EXCHANGE{
             else{
                 std::cout <<"No order filled!\n";
             }
-            FIX::sendAllMessages(filledOrders, ackPublisher);
+            FIX::sendAllMessages(filledOrders, ackPublisher, exchangeLog, cumulativeQty);
         }
     }
 

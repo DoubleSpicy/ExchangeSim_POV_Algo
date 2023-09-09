@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <type_traits>
 #include <algorithm>
+#include <fstream>
 #include "zmq.hpp"
 
 namespace FIX{
@@ -63,18 +64,21 @@ namespace FIX{
             std::string MsgType; // ACK ORDER / ACK FILL / ACK CANCELLED
             std::string OrderID; // original order id
             float OrderQty; // quantity invloved
+            float Price;
             ACK(const std::string & TargetCompID,
                 const std::string & MsgType,
                 const std::string OrderID,
-                const float & OrderQty);
+                const float & OrderQty,
+                const float & Price);
+            ACK(const std::string & msg);
             std::string to_string() override;
     };
 
     std::vector<FIX::order> parseQuotes(const std::string & marketData);
 
     // template <typename T, typename A>
-    void sendAllMessages(std::vector<FIX::ACK> & filledOrders, zmq::socket_t & publisher);
-    void sendAllMessages(std::vector<FIX::order> & filledOrders, zmq::socket_t & publisher);
+    void sendAllMessages(std::vector<FIX::ACK> & filledOrders, zmq::socket_t & publisher, std::ofstream & log, float & cumulativeQuantity);
+    void sendAllMessages(std::vector<FIX::order> & filledOrders, zmq::socket_t & publisher, std::ofstream & log);
 };
 
 
